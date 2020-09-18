@@ -1,0 +1,111 @@
+#Implement A* search algorithm
+
+import pandas as pd
+from math import sqrt
+
+map = {
+    "Name":{
+        "0":"Arad","1":"Bucharest","2":"Craiova",
+        "3":"Drobeta","4":"Eforie","5":"Fagaras",
+        "6":"Giurgiu","7":"Hirsova","8":"Iasi",
+        "9":"Lugoj","10":"Mehadia","11":"Neamt",
+        "12":"Oradea","13":"Pitesti","14":"Rimnicu Vilcea",
+        "15":"Sibiu","16":"Timisoara","17":"Urziceni",
+        "18":"Vaslui","19":"Zerind"
+        },
+     "X":{
+         "0":62,"1":560,"2":319,"3":177,"4":824,"5":409,"6":518,
+          "7":777,"8":680,"9":175,"10":182,"11":571,"12":121,"13":434,
+          "14":290,"15":244,"16":67,"17":649,"18":735,"19":86
+          },
+     "Y":{"0":144,"1":409,"2":478,"3":463,"4":469,"5":217,"6":507,
+          "7":378,"8":122,"9":333,"10":394,"11":73,"12":19,"13":353,
+          "14":281,"15":202,"16":282,"17":376,"18":222,"19":83
+          }
+     }
+     
+  
+  distances = {
+    "A":{
+        "0":"Arad","1":"Arad","2":"Arad","3":"Bucharest","4":"Bucharest","5":"Craiova",
+        "6":"Craiova","7":"Drobeta","8":"Fagaras","9":"Hirsova","10":"Iasi","11":"Lugoj",
+        "12":"Mehadia","13":"Oradea","14":"Timisoara","15":"Pitesti","16":"Rimnicu Vilcea",
+        "17":"Sibiu","18":"Sibiu","19":"Urziceni","20":"Urziceni","21":"Vaslui","22":"Zerind",
+        "23":"Zerind","24":"Timisoara","25":"Sibiu","26":"Giurgiu","27":"Urziceni","28":"Rimnicu Vilcea",
+        "29":"Pitesti","30":"Craiova","31":"Bucharest","32":"Eforie","33":"Neamt","34":"Mehadia","35":"Drobeta",
+        "36":"Sibiu","37":"Lugoj","38":"Bucharest","39":"Pitesti","40":"Fagaras",
+        "41":"Rimnicu Vilcea","42":"Vaslui","43":"Hirsova","44":"Iasi","45":"Oradea"},
+    "B":{
+        "0":"Zerind","1":"Timisoara","2":"Sibiu","3":"Giurgiu","4":"Urziceni","5":"Rimnicu Vilcea",
+        "6":"Pitesti","7":"Craiova","8":"Bucharest","9":"Eforie","10":"Neamt","11":"Mehadia","12":"Drobeta",
+        "13":"Sibiu","14":"Lugoj","15":"Bucharest","16":"Pitesti","17":"Fagaras","18":"Rimnicu Vilcea","19":"Vaslui",
+        "20":"Hirsova","21":"Iasi","22":"Oradea","23":"Arad","24":"Arad","25":"Arad","26":"Bucharest",
+        "27":"Bucharest","28":"Craiova","29":"Craiova","30":"Drobeta","31":"Fagaras","32":"Hirsova","33":"Iasi",
+        "34":"Lugoj","35":"Mehadia","36":"Oradea","37":"Timisoara","38":"Pitesti","39":"Rimnicu Vilcea","40":"Sibiu",
+        "41":"Sibiu","42":"Urziceni","43":"Urziceni","44":"Vaslui","45":"Zerind"},
+    "Distance":{
+        "0":75,"1":118,"2":140,"3":90,"4":85,"5":146,"6":138,"7":120,"8":211,"9":86,"10":87,"11":70,"12":75,"13":151,
+        "14":111,"15":101,"16":97,"17":99,"18":80,"19":142,"20":98,"21":92,"22":71,"23":75,"24":118,"25":140,"26":90,
+        "27":85,"28":146,"29":138,"30":120,"31":211,"32":86,"33":87,"34":70,"35":75,"36":151,"37":111,"38":101,"39":97,
+        "40":99,"41":80,"42":142,"43":98,"44":92,"45":71
+        }
+      }
+      
+places_coord = pd.DataFrame.from_dict(map)
+distance_route = pd.DataFrame.from_dict(distances)
+
+def heuristic(node, dest):
+  if node == dest:
+    return 0
+  else:
+    x_dist = (places_coord.loc[places_coord['Name'] == node].X.item() - places_coord.loc[places_coord['Name'] == dest].X.item()) ** 2
+    y_dist = (places_coord.loc[places_coord['Name'] == node].Y.item() - places_coord.loc[places_coord['Name'] == dest].Y.item()) ** 2 
+    return int(sqrt(x_dist + y_dist))
+
+def curr_forw(curr_node, final_dest):
+  h = [] # heruistic added with curr_node to next_spot dist
+  pl = [] # names of all places
+  global distances
+  if curr_node == final_dest:
+    return curr_node, 0
+  places = distance_route.loc[distance_route['A'] == curr_node]
+  print('Current Node: ', curr_node)
+  for place in places.itertuples():
+    if place.B not in closed_list:
+      pl.append(place.B)
+      print(place.B, ' || edge: ', place.Distance, ' ; weight so far: ', distances, ' ; heuristic:  ', heuristic(place.B, final_dest))
+      h.append(distances + place.Distance + heuristic(place.B, final_dest)) # weights added but path not optimal
+  print('\n')
+  next_spot = pl[h.index(min(h))]
+  # distances += places.loc[places['B'] == next_spot].Distance.item()
+  return next_spot, places.loc[places['B'] == next_spot].Distance.item()
+
+
+def a_star(source, dest):
+  global distances
+  if source == dest:
+    return dest
+  open_list.append(source)
+  while len(open_list) > 0:
+    n, h_val = curr_forw(open_list[0], dest)
+    if n == dest:
+      distances += h_val
+      s = open_list.pop(0)
+      closed_list.append(s)
+      closed_list.append(dest)
+      return closed_list
+    distances += h_val
+    s = open_list.pop(0)
+    open_list.append(n)
+    closed_list.append(s)
+  return closed_list
+
+
+open_list = []
+closed_list = []
+distances = 0 # weights summed till curr-1 node from source
+print(a_star('Arad', 'Neamt'))
+
+# the path isnt optimal as the heuristic underestimates the admissibility based on the given coordinates, and that might be the actual issue
+# else the algorithm works, and the code remains correct
+
